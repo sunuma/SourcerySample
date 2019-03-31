@@ -1,0 +1,6 @@
+sources:
+  - ./SourcerySample/
+templates:
+  - ./templates/
+output:
+  ./SourcerySampleUITests/Page/

@@ -1,0 +1,68 @@
+import Foundation
+import XCTest
+
+{% for type in types.classes %}
+{% if type.name | contains:"ViewController" %}
+class {{ type.name | replace:"ViewController","" }}Page: Page {
+    let app: XCUIApplication
+    {% for variable in type.variables %}
+    {% if variable.typeName.name  == "UILabel!" %}
+   	private var {{ variable.name }}: XCUIElement { return app.staticTexts["{{ variable.name }}"] }
+   	{% elif variable.typeName.name  == "UITextField!" %}
+   	private var {{ variable.name }}: XCUIElement { return app.textFields["{{ variable.name }}"] }
+   	{% elif variable.typeName.name  == "UIButton!" %}
+   	private var {{ variable.name }}: XCUIElement { return app.buttons["{{ variable.name }}"] }
+   	{% elif variable.typeName.name  == "UITableView!" %}
+   	private var {{ variable.name }}: XCUIElement { return app.tables["{{ variable.name }}"] }
+   	{% endif %}
+   	{% endfor %}
+    
+
+    init(app: XCUIApplication) {
+        self.app = app
+    }
+
+    func assertExists() -> {{ type.name | replace:"ViewController","" }}Page {
+    	{% for variable in type.variables %}
+    	{% if variable.typeName.name  == "UILabel!" or variable.typeName.name  == "UITextField!" or variable.typeName.name  == "UIButton!" %}
+    	XCTAssert({{ variable.name }}.exists)
+    	{% endif %}
+   		{% endfor %}
+   		return {{ type.name | replace:"ViewController","" }}Page(app: app)
+    }
+
+    func assertInitValueTextField(text: String = "") -> {{ type.name | replace:"ViewController","" }}Page {
+    	{% for variable in type.variables %}
+    	{% if variable.typeName.name  == "UITextField!" %}
+        assertValue{{ variable.name|upperFirstLetter }}(text)
+        {% endif %}
+   		{% endfor %}
+        return {{ type.name | replace:"ViewController","" }}Page(app: app)
+    }
+
+   	{% for variable in type.variables %}
+    {% if variable.typeName.name  == "UITextField!" %}
+    private func input{{ variable.name|upperFirstLetter }}(_ text: String) {
+    	{{ variable.name }}.tap()
+        {{ variable.name }}.typeText(text)
+    }
+
+    {% endif %}
+   	{% endfor %}
+    
+    {% for variable in type.variables %}
+    {% if variable.typeName.name  == "UITextField!" %}
+    private func assertValue{{ variable.name|upperFirstLetter }}(_ text: String) {
+        guard let value = {{ variable.name }}.value as? String else {
+            XCTFail("{{ variable.name }} value is nil")
+            return
+        }
+        XCTAssertEqual(value, text)
+    }
+
+    {% endif %}
+   	{% endfor %}
+}
+
+{% endif %}
+{% endfor %}
